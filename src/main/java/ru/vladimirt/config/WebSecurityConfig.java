@@ -7,15 +7,14 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
-
-import javax.sql.DataSource;
+import ru.vladimirt.services.UserService;
 
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
-    private DataSource dataSource; // Создан спрингом и Необходим для авторизации т.к. там мы обращаемся к бд
+    private UserService userService;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -36,13 +35,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth
-                .jdbcAuthentication()
-                .dataSource(dataSource)//Наш датасорс
-                .passwordEncoder(NoOpPasswordEncoder.getInstance())//Кодирование пароля
-                //Запрос на пользователя - порядок полей должен быть именно таким, он задан системой
-                .usersByUsernameQuery("select username, password, active from usr where username=?")
-                //Получаем список пользвователей с их ролями
-                .authoritiesByUsernameQuery("Select u.username, ur.roles from" +
-                        " usr u inner join user_role ur on u.id=ur.user_id where u.username=?");
+                .userDetailsService(userService)
+                .passwordEncoder(NoOpPasswordEncoder.getInstance());
     }
 }
