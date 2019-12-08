@@ -1,11 +1,13 @@
 package ru.vladimirt.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import ru.vladimirt.domain.Message;
+import ru.vladimirt.domain.User;
 import ru.vladimirt.repositories.IMessageRepository;
 
 import java.util.Map;
@@ -34,10 +36,12 @@ public class MainController {
     }
 
     @PostMapping("/main")
-    public String addMessage(@RequestParam String text, @RequestParam String tag, Map<String, Object> model){
-        Message message = new Message();
-        message.setText(text);
-        message.setTag(tag);
+    public String addMessage(
+            @AuthenticationPrincipal User user,
+            @RequestParam String text,
+            @RequestParam String tag,
+            Map<String, Object> model){
+        Message message = new Message(text, tag, user);
         messageRepository.save(message);
 
         Iterable<Message> messages = messageRepository.findAll();
