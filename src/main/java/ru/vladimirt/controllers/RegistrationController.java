@@ -19,8 +19,8 @@ public class RegistrationController {
     private IUserRepository userRepository;
 
     @GetMapping("/registration")
-    public String registration(Model model){
-        model.addAttribute("message","");
+    public String registration(){
+//        model.addAttribute("message","");
         return "registration";
     }
 
