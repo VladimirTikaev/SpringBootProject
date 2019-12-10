@@ -2,7 +2,8 @@
 <#import "parts/login.ftl" as login>
 <@c.page>
 <div>
-<@login.logout/>
+    <@login.logout/>
+    <span><a href="/user"> User list</a> </span>
 </div>
 <div>
     <form method="post">
@@ -21,7 +22,7 @@
     </form>
 </div>
 <div> Список сообщений</div>
-<#list messages as message>
+    <#list messages as message>
         <div>
 
             <b>${message.id}</b>
@@ -29,9 +30,9 @@
             <i>${message.tag}</i>
             <strong>${message.authorName}</strong>
         </div>
-<#else >
+    <#else >
 No messages
-</#list>
+    </#list>
 
 
 </@c.page>
