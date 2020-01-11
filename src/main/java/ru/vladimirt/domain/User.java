@@ -22,6 +22,26 @@ public class User implements UserDetails {
 
     private boolean active;
 
+    private String email;
+
+    private String activationCode;
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getActivationCode() {
+        return activationCode;
+    }
+
+    public void setActivationCode(String activationCode) {
+        this.activationCode = activationCode;
+    }
+
     //Не совсем понятно для чего эта аннотация.... Для работы с коллекциями
     //feth - способ подгрузки EAGER - подгружает сразу все при запросе пользователя
     // LAZY- подгружает только при обращении к полю
