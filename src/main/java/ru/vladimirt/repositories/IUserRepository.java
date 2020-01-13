@@ -5,4 +5,6 @@ import ru.vladimirt.domain.User;
 
 public interface IUserRepository extends JpaRepository<User, Long> {
     User findByUsername(String username);
+
+    User findByActivationCode(String code);
 }
