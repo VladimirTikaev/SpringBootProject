@@ -10,9 +10,7 @@ import ru.vladimirt.domain.Role;
 import ru.vladimirt.domain.User;
 import ru.vladimirt.repositories.IUserRepository;
 
-import javax.swing.*;
-import java.util.Collections;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -41,6 +39,13 @@ public class UserService implements UserDetailsService {
         // перейти. Если перешел, то аккаунт подтвержден
         user.setActivationCode(UUID.randomUUID().toString());
 
+        userRepository.save(user);
+        sendMessage(user);
+
+        return true;
+    }
+
+    private void sendMessage(User user) {
         //Если есть мэйд, то отправляем туда активационное письмо с сгенерированной ссылкой
         if(!StringUtils.isEmpty(user.getEmail())){
             String message = String.format(
@@ -51,9 +56,6 @@ public class UserService implements UserDetailsService {
             );
             mailSender.send(user.getEmail(), "Activation code",message);
         }
-        userRepository.save(user);
-
-        return true;
     }
 
     public boolean activateUser(String code) {
@@ -67,5 +69,66 @@ public class UserService implements UserDetailsService {
         user.setActivationCode(null);
         userRepository.save(user);
         return true;
+    }
+
+    public List<User> findAll() {
+        return userRepository.findAll();
+    }
+
+    public void saveUser(User user, String userName, Map<String, String> form) {
+
+        user.setUsername(userName);
+
+        //Перевод ролей из Enum в Set
+//        Set<String> roles = Arrays.stream(Role.values())
+//                .map(Role::name)
+//                .collect(Collectors.toSet());
+        Set<String> roles = new HashSet<>();
+        for (Role role : Role.values()) {
+            roles.add(role.name());
+        }
+
+        user.getRoles().clear();
+
+        //Проходим по всем параметрам с формы
+        for (String key : form.keySet()) {
+            //Если ключ из всех параметром формы совпадает с названием роли(содержится в сете), то мы добавляем эту роль юзеру
+            // Таким образом все параметры, которые не роли - сюда точно не попадут
+            //Единственный вопрос...если пользователь не выбрал какую-то роль...она ведь все равно должна придти, но со значение
+            //uncheked или Null...т.е. она тоже должна попасть...но опять же все равботает..
+            if(roles.contains(key)){
+                user.getRoles().add(Role.valueOf(key));
+            }
+        }
+        userRepository.save(user);
+        //Здесь происходит редирект, но для перехода на спсок юзеров нам нужна модель со всеми юзерами
+        //Мы здесь не используем никакую модель, но оно все равно работает...
+    }
+
+    public void updateProfile(User user, String password, String email) {
+        String userEmai1 = user.getEmail();
+
+        //Проверка на то, что мэйл был изменен
+        boolean isEmailChanged = (email != null && !email.equals(userEmai1)
+                || (userEmai1 != null && !userEmai1.equals(email)));
+
+        if(isEmailChanged){
+            user.setEmail(email);
+            //Если мэйл изменен и он не пуст, то генерируем новый активационный код
+            if(!StringUtils.isEmpty(email)){
+                user.setActivationCode(UUID.randomUUID().toString());
+            }
+        }
+
+        if(!StringUtils.isEmpty(password)){
+            user.setPassword(password);
+        }
+
+        userRepository.save(user);
+
+        if(isEmailChanged) {
+            sendMessage(user);
+        }
+
     }
 }
