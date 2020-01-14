@@ -1,0 +1,1 @@
+update sweater.usr set password = MD5(password)
