@@ -49,7 +49,7 @@ public class MainController {
         Iterable<Message> messages;
 
         if(filter != null && !filter.isEmpty()){
-            messages = messageRepository.findByTextContaining(filter);
+            messages = messageRepository.findByTagContaining(filter);
         }else {
             messages = messageRepository.findAll();
         }
@@ -65,7 +65,7 @@ public class MainController {
             @Valid Message message, //Вместо 2-ух параметров используем 1 - просто класс. Также теперь можно добавить валидацию
             BindingResult bindingResult, // Список аргументов и сообщений ощибок валидаций. Всегда должен идти перед model
             Model model,
-            @RequestParam("file") MultipartFile file)
+            @RequestParam("file_name") MultipartFile file)
              throws IOException {
 
         message.setAuthor(user);
@@ -91,7 +91,7 @@ public class MainController {
         return "main";
     }
 
-    private void saveFile(@Valid Message message, @RequestParam("file") MultipartFile file) throws IOException {
+    private void saveFile(@Valid Message message, @RequestParam("file_name") MultipartFile file) throws IOException {
         if (file != null && !file.getOriginalFilename().isEmpty()) {
 
             File uploadDir = new File(uploadPath);
@@ -137,7 +137,7 @@ public class MainController {
             @RequestParam("id") Message message,
             @RequestParam("text") String text,
             @RequestParam("tag") String tag,
-            @RequestParam("file") MultipartFile file
+            @RequestParam("file_name") MultipartFile file
 
     ) throws IOException {
 
