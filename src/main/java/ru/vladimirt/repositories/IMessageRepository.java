@@ -11,6 +11,7 @@ public interface IMessageRepository extends CrudRepository<Message, Long> {
     List<Message> findByTag(String tag);
 
     List<Message> findByTextContaining(String filter);
+    List<Message> findByTagContaining(String filter);
 
 
 }
