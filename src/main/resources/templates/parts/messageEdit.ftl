@@ -16,7 +16,7 @@
              </div>
             <div class="form-group">
                 <input class="form-control ${(tagError??)?string('is-invalid', '')}"
-                       value = "<#if message??>${message.tag}</#if>" type="text" name="tag" placeholder="Введите тэг">
+                       value = "<#if message??>${message.tag}</#if>" type="text" name="tag" placeholder="Введите тэг"/>
                 <#if tagError??>
                      <div class="invalid-feedback">
                           ${tagError}
@@ -25,7 +25,7 @@
             </div>
             <div class="form-group">
                 <div class="custom-file">
-                    <input type="file" name="file" id="customFile">
+                    <input type="file" name="file_name" id="customFile"/>
                     <label class="custom-file-label" for="customFile">Choose file</label>
                 </div>
             </div>
