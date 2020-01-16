@@ -12,13 +12,14 @@ import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 import ru.vladimirt.domain.Message;
 import ru.vladimirt.domain.User;
+import ru.vladimirt.domain.dto.MessageDto;
 import ru.vladimirt.repositories.IMessageRepository;
 import ru.vladimirt.services.MessageService;
 
@@ -57,11 +58,12 @@ public class MessageController {
                        Model model,
                        //Т.к. сообщения могут выводиться каждый раз в разном порядке
                        // Задаем сортировку по id и по убыванию
-                       @PageableDefault(sort = {"id"}, direction = Sort.Direction.DESC) Pageable pageable
+                       @PageableDefault(sort = {"id"}, direction = Sort.Direction.DESC) Pageable pageable,
+                       @AuthenticationPrincipal User user
     ){
 
 
-        Page<Message> page = messageService.messageList(pageable, filter);
+        Page<MessageDto> page = messageService.messageList(pageable, filter, user);
 
         model.addAttribute("page",page);
         model.addAttribute("url","/main");
@@ -98,7 +100,7 @@ public class MessageController {
             messageRepository.save(message);
         }
 
-        Page<Message> pages = messageService.messageList(pageable, null);
+        Page<MessageDto> pages = messageService.messageList(pageable, null, user);
         model.addAttribute("page", pages);
         model.addAttribute("url","/main");
         return "main";
@@ -131,7 +133,7 @@ public class MessageController {
             @PageableDefault(sort = {"id"}, direction = Sort.Direction.DESC) Pageable pageable
     ){
 
-        Page<Message> page = messageService.messageListForUser(pageable, author);
+        Page<MessageDto> page = messageService.messageListForUser(pageable, currentUser, author);
        // Set<Message> messages = user.getMessages();
 
         model.addAttribute("userChannel", author);
@@ -174,5 +176,33 @@ public class MessageController {
         return "redirect:/user-messages/" + user.getId();
     }
 
+    @GetMapping("/messages/{message}/like")
+    public String like(
+            @AuthenticationPrincipal User currentUser,
+            @PathVariable Message message,
+            //Т.к  у нас в конце будет редирект. Эта штука позволит перекинуть необходимые аргументы в метод
+            RedirectAttributes redirectAttributes,
+            //С помощью реферрер мы поймем откуда мы пришли, чтобы туда и вернуться
+            @RequestHeader(required = false) String referer
+    ){
+
+        Set<User> likes = message.getLikes();
+
+        if(likes.contains(currentUser)){
+            likes.remove(currentUser);
+        }else {
+            likes.add(currentUser);
+        }
+
+        //Строим компонент с парамерами, которые были переданны по рефферер
+        UriComponents components = UriComponentsBuilder.fromHttpUrl(referer).build();
+
+        components.getQueryParams()
+                .entrySet() //Получаем сет параметров
+                // И для каждой пары параметров добавляем их в редиректатрибут
+                .forEach(pair -> redirectAttributes.addAttribute(pair.getKey(), pair.getValue()));
+
+        return "redirect:" + components.getPath();
+    }
 
 }
