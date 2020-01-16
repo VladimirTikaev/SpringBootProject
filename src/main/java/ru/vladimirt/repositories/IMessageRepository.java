@@ -1,5 +1,7 @@
 package ru.vladimirt.repositories;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.CrudRepository;
 import ru.vladimirt.domain.Message;
 
@@ -8,10 +10,9 @@ import java.util.List;
 //Спринг автоматически создает бин
 public interface IMessageRepository extends CrudRepository<Message, Long> {
 
-    List<Message> findByTag(String tag);
 
-    List<Message> findByTextContaining(String filter);
-    List<Message> findByTagContaining(String filter);
+    Page<Message> findByTagContaining(String filter, Pageable pageable);
+    Page<Message> findAll(Pageable pageable);
 
 
 }
