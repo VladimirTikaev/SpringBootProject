@@ -75,8 +75,10 @@ public class MainController {
             @Valid Message message, //Вместо 2-ух параметров используем 1 - просто класс. Также теперь можно добавить валидацию
             BindingResult bindingResult, // Список аргументов и сообщений ощибок валидаций. Всегда должен идти перед model
             Model model,
-            @RequestParam("file_name") MultipartFile file)
-             throws IOException {
+            @RequestParam("file_name") MultipartFile file,
+            @PageableDefault(sort = {"id"}, direction = Sort.Direction.DESC) Pageable pageable
+
+            )  throws IOException {
 
         message.setAuthor(user);
 
@@ -96,8 +98,9 @@ public class MainController {
             messageRepository.save(message);
         }
 
-        Iterable<Message> messages = messageRepository.findAll();
-        model.addAttribute("messages",messages);
+        Page<Message> pages = messageRepository.findAll(pageable);
+        model.addAttribute("page", pages);
+        model.addAttribute("url","/main");
         return "main";
     }
 
@@ -124,9 +127,11 @@ public class MainController {
             @AuthenticationPrincipal User currentUser,
             @PathVariable User user,
             Model model,
-            @RequestParam(required = false) Message message //необязательный параметр
+            @RequestParam(required = false) Message message, //необязательный параметр
+            @PageableDefault(sort = {"id"}, direction = Sort.Direction.DESC) Pageable pageable
     ){
 
+        Page<Message> page = messageRepository.findByAuthor( user, pageable);
         Set<Message> messages = user.getMessages();
 
         model.addAttribute("userChannel", user);
@@ -136,6 +141,8 @@ public class MainController {
         model.addAttribute("messages", messages);
         model.addAttribute("message", message);
         model.addAttribute("isCurrentUser", currentUser.equals(user));
+        model.addAttribute("url", "/user-messages/" + user.getId());
+        model.addAttribute("page", page);
 
         return "userMessages";
     }
