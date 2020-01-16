@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import ru.vladimirt.domain.Message;
 import ru.vladimirt.domain.User;
 import ru.vladimirt.repositories.IMessageRepository;
+import ru.vladimirt.services.MessageService;
 
 import javax.validation.Valid;
 import java.io.File;
@@ -30,9 +31,12 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Controller
-public class MainController {
+public class MessageController {
     @Autowired
     private IMessageRepository messageRepository;
+
+    @Autowired
+    private MessageService messageService;
 
     @Value("${upload.path}") //Это спел. Здесь он ищет свойство upload.path и вставляет в переменную
     private String uploadPath;
@@ -55,13 +59,9 @@ public class MainController {
                        // Задаем сортировку по id и по убыванию
                        @PageableDefault(sort = {"id"}, direction = Sort.Direction.DESC) Pageable pageable
     ){
-        Page<Message> page;
 
-        if(filter != null && !filter.isEmpty()){
-            page = messageRepository.findByTagContaining(filter, pageable);
-        }else {
-            page = messageRepository.findAll(pageable);
-        }
+
+        Page<Message> page = messageService.messageList(pageable, filter);
 
         model.addAttribute("page",page);
         model.addAttribute("url","/main");
@@ -98,7 +98,7 @@ public class MainController {
             messageRepository.save(message);
         }
 
-        Page<Message> pages = messageRepository.findAll(pageable);
+        Page<Message> pages = messageService.messageList(pageable, null);
         model.addAttribute("page", pages);
         model.addAttribute("url","/main");
         return "main";
@@ -122,26 +122,26 @@ public class MainController {
         }
     }
 
-    @GetMapping("/user-messages/{user}")
+    @GetMapping("/user-messages/{author}")
     public String userMessages(
             @AuthenticationPrincipal User currentUser,
-            @PathVariable User user,
+            @PathVariable User author,
             Model model,
             @RequestParam(required = false) Message message, //необязательный параметр
             @PageableDefault(sort = {"id"}, direction = Sort.Direction.DESC) Pageable pageable
     ){
 
-        Page<Message> page = messageRepository.findByAuthor( user, pageable);
-        Set<Message> messages = user.getMessages();
+        Page<Message> page = messageService.messageListForUser(pageable, author);
+       // Set<Message> messages = user.getMessages();
 
-        model.addAttribute("userChannel", user);
-        model.addAttribute("subscriptionsCount", user.getSubscriptions().size());
-        model.addAttribute("subscribersCount", user.getSubscribers().size());
-        model.addAttribute("isSubscriber", user.getSubscribers().contains(currentUser));
-        model.addAttribute("messages", messages);
+        model.addAttribute("userChannel", author);
+        model.addAttribute("subscriptionsCount", author.getSubscriptions().size());
+        model.addAttribute("subscribersCount", author.getSubscribers().size());
+        model.addAttribute("isSubscriber", author.getSubscribers().contains(currentUser));
+        model.addAttribute("page", page);
         model.addAttribute("message", message);
-        model.addAttribute("isCurrentUser", currentUser.equals(user));
-        model.addAttribute("url", "/user-messages/" + user.getId());
+        model.addAttribute("isCurrentUser", currentUser.equals(author));
+        model.addAttribute("url", "/user-messages/" + author.getId());
         model.addAttribute("page", page);
 
         return "userMessages";
